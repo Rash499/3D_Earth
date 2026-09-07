@@ -1,18 +1,7 @@
-import InteractiveEarthGlobe from "./components/InteractiveEarthGlobe";
+import InteractiveEarthGlobe from "./components/globe/InteractiveEarthGlobe";
 
 function App() {
-  return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-        background: "#020617",
-      }}
-    >
-      <InteractiveEarthGlobe />
-    </div>
-  );
+  return <InteractiveEarthGlobe />;
 }
 
 export default App;
