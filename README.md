@@ -30,4 +30,44 @@ d3-geo
 Vite
 REST Countries API
 
+Modular Interactive Earth Globe
+
+Split from the working InteractiveEarthGlobe.tsx into focused modules.
+
+Files
+
+constants.ts — URLs and globe/camera constants
+
+types.ts — shared TypeScript types
+
+coordinates.ts — geographic ↔ 3D coordinate conversion
+
+CountryBorders.ts — TopoJSON loading and border geometry
+
+CountryDetection.ts — raycasting and d3-geo country detection
+
+CountryData.ts — REST Countries API
+
+GlobeControls.ts — OrbitControls configuration
+
+GlobeScene.ts — Three.js scene, Earth, atmosphere, stars, cleanup
+
+GlobeUI.tsx — React UI/tooltip/country panel
+
+InteractiveEarthGlobe.tsx — main React component
+
+Install
+
+npm install three topojson-client d3-geo
+npm install -D @types/three @types/geojson @types/d3-geo
+
+Keep these files in your existing project:
+
+public/earth.jpg
+public/countries-110m.json
+
+Then import:
+
+import InteractiveEarthGlobe from "./components/globe/InteractiveEarthGlobe";
+
 ![alt text](image.png)
