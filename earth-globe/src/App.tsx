@@ -1,7 +1,10 @@
-import InteractiveEarthGlobe from "./components/globe/InteractiveEarthGlobe";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import AppRouter from "./router";
+import "./index.css";
 
-function App() {
-  return <InteractiveEarthGlobe />;
-}
-
-export default App;
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <AppRouter />
+  </StrictMode>
+);
