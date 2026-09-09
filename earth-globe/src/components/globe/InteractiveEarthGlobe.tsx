@@ -1,50 +1,76 @@
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { GlobeUI } from "./GlobeUI";
 import { useBorderHighlight } from "./hooks/useBorderHighlight";
 import { useCountryBorders } from "./hooks/useCountryBorders";
-import { useCountryDetails } from "./hooks/useCountryDetails";
 import { useCountryInteraction } from "./hooks/useCountryInteraction";
 import { useGlobeScene } from "./hooks/useGlobeScene";
+import type { CountryFeature } from "./types";
 
 export default function InteractiveEarthGlobe() {
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
   // Scene lifecycle: create/resize/animate/dispose the three.js globe.
+  // UNCHANGED.
   const { globeRef, ready } = useGlobeScene(mountRef);
 
   // Country geometry: load GeoJSON, build + attach border lines.
+  // UNCHANGED.
   const { countriesRef, loading, error } = useCountryBorders(
     globeRef,
     ready
   );
 
-  // Pointer interaction: hover + click -> selection.
-  const { hovered, selected, setSelected, tooltip } =
-    useCountryInteraction(globeRef, countriesRef, ready);
+  // On click, navigate to the country's dashboard instead of showing
+  // details inline. country.id is the ccn3 numeric code already used by
+  // CountryData.ts, so no new identifier scheme is introduced.
+  const handleCountryClick = (country: CountryFeature) => {
+    if (country.id == null) {
+      console.warn(
+        "Clicked country has no id; cannot navigate to its dashboard.",
+        country
+      );
+      return;
+    }
 
-  // Enriched details for whichever country is currently selected.
-  const { selectedName, details, detailsLoading } =
-    useCountryDetails(selected);
+    navigate(`/country/${country.id}`, {
+      state: { name: country.properties?.name },
+    });
+  };
 
-  // Keep border colors in sync with hover/selection state.
+  // Pointer interaction: hover + click. Hover behavior and border
+  // highlighting are UNCHANGED; click now navigates instead of opening
+  // an in-page panel.
+  const { hovered, selected, tooltip } = useCountryInteraction(
+    globeRef,
+    countriesRef,
+    ready,
+    handleCountryClick
+  );
+
+  // Keep border colors in sync with hover/selection state. UNCHANGED.
   useBorderHighlight(globeRef, countriesRef, hovered, selected);
 
   return (
     <div style={styles.page}>
       <div ref={mountRef} style={styles.canvas} />
 
+      {/*
+        NOTE: GlobeUI's `selected`/`details`/`detailsLoading`/`onClose`
+        props are gone — that panel content now lives in
+        CountryDashboardPage. If your GlobeUI.tsx still requires those
+        props, either make them optional there or trim its selected-country
+        panel, since the globe page no longer needs to render country
+        details inline.
+      */}
       <GlobeUI
         loading={loading}
         error={error}
         hovered={hovered}
-        selected={selected}
-        details={details}
-        detailsLoading={detailsLoading}
         tooltip={tooltip}
         countryCount={countriesRef.current.length}
-        selectedName={selectedName}
-        onClose={() => setSelected(null)}
       />
     </div>
   );
