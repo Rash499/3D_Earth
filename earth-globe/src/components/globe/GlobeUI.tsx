@@ -1,32 +1,16 @@
 import type { CSSProperties } from "react";
-import type { CountryFeature, CountryInfo } from "./types";
+import type { CountryFeature } from "./types";
 
 type Props = {
   loading: boolean;
   error: string | null;
   hovered: CountryFeature | null;
-  selected: CountryFeature | null;
-  details: CountryInfo | null;
-  detailsLoading: boolean;
   tooltip: { x: number; y: number };
   countryCount: number;
-  selectedName: string;
-  onClose: () => void;
 };
 
 export function GlobeUI(props: Props) {
-  const {
-    loading,
-    error,
-    hovered,
-    selected,
-    details,
-    detailsLoading,
-    tooltip,
-    countryCount,
-    selectedName,
-    onClose,
-  } = props;
+  const { loading, error, hovered, tooltip, countryCount } = props;
 
   return (
     <>
@@ -46,7 +30,7 @@ export function GlobeUI(props: Props) {
 
           <p style={styles.subtitle}>
             Drag to rotate · Scroll to zoom · Hover a
-            country · Click for details
+            country · Click to open its dashboard
           </p>
         </div>
 
@@ -99,174 +83,6 @@ export function GlobeUI(props: Props) {
       )}
 
       {/* ------------------------------------------------ */}
-      {/* COUNTRY INFORMATION PANEL */}
-      {/* ------------------------------------------------ */}
-
-      {selected && (
-        <aside style={styles.panel}>
-          {/* CLOSE BUTTON */}
-
-          <button
-            style={styles.close}
-            onClick={onClose}
-            aria-label="Close country information"
-          >
-            ×
-          </button>
-
-          {/* LOADING COUNTRY */}
-
-          {detailsLoading && (
-            <div style={styles.detailsLoading}>
-              <div style={styles.smallSpinner} />
-
-              Loading country information…
-            </div>
-          )}
-
-          {/* FLAG */}
-
-          {!detailsLoading &&
-            details?.flag && (
-              <img
-                src={details.flag}
-                alt={`${details.name} flag`}
-                style={styles.flag}
-              />
-            )}
-
-          {/* COUNTRY LABEL */}
-
-          <div style={styles.panelEyebrow}>
-            COUNTRY
-          </div>
-
-          {/* COUNTRY NAME */}
-
-          <h2 style={styles.countryName}>
-            {details?.name ?? selectedName}
-          </h2>
-
-          {/* COUNTRY DETAILS */}
-
-          {detailsLoading ? (
-            <div style={styles.loadingMessage}>
-              Fetching information from REST Countries…
-            </div>
-          ) : details ? (
-            <div style={styles.details}>
-              {/* CAPITAL */}
-
-              <Detail
-                label="Capital"
-                value={
-                  details.capital ?? "—"
-                }
-              />
-
-              {/* POPULATION */}
-
-              <Detail
-                label="Population"
-                value={
-                  details.population !==
-                  undefined
-                    ? new Intl.NumberFormat().format(
-                        details.population
-                      )
-                    : "—"
-                }
-              />
-
-              {/* AREA */}
-
-              <Detail
-                label="Area"
-                value={
-                  details.area !==
-                  undefined
-                    ? `${new Intl.NumberFormat().format(
-                        details.area
-                      )} km²`
-                    : "—"
-                }
-              />
-
-              {/* REGION */}
-
-              <Detail
-                label="Region"
-                value={
-                  details.region ?? "—"
-                }
-              />
-
-              {/* SUBREGION */}
-
-              <Detail
-                label="Subregion"
-                value={
-                  details.subregion ?? "—"
-                }
-              />
-
-              {/* CURRENCY */}
-
-              <Detail
-                label="Currency"
-                value={
-                  details.currencies &&
-                  details.currencies.length > 0
-                    ? details.currencies.join(
-                        ", "
-                      )
-                    : "—"
-                }
-              />
-
-              {/* LANGUAGES */}
-
-              <Detail
-                label="Languages"
-                value={
-                  details.languages &&
-                  details.languages.length > 0
-                    ? details.languages.join(
-                        ", "
-                      )
-                    : "—"
-                }
-              />
-
-              {/* CONTINENT */}
-
-              <Detail
-                label="Continent"
-                value={
-                  details.continents &&
-                  details.continents.length > 0
-                    ? details.continents.join(
-                        ", "
-                      )
-                    : "—"
-                }
-              />
-            </div>
-          ) : (
-            <div style={styles.loadingMessage}>
-              Unable to load country information.
-            </div>
-          )}
-
-          {/* DATA SOURCE */}
-
-          <p style={styles.panelNote}>
-            Data loaded from REST Countries.
-          </p>
-        </aside>
-      )}
-
-      {/* ------------------------------------------------ */}
       {/* COUNTRY COUNT */}
       {/* ------------------------------------------------ */}
 
@@ -275,26 +91,6 @@ export function GlobeUI(props: Props) {
         {countryCount || "—"} countries
       </div>
     </>
-  );
-}
-
-/* ------------------------------------------------ */
-/* DETAIL COMPONENT */
-/* ------------------------------------------------ */
-
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div style={styles.detail}>
-      <span>{label}</span>
-
-      <strong>{value}</strong>
-    </div>
   );
 }
 
@@ -451,184 +247,6 @@ const styles: Record<
     fontWeight: 650,
 
     whiteSpace: "nowrap",
-  },
-
-  /* -------------------------------------------- */
-  /* COUNTRY PANEL */
-  /* -------------------------------------------- */
-
-  panel: {
-    position: "absolute",
-
-    top: 32,
-    right: 32,
-
-    width:
-      "min(360px, calc(100vw - 64px))",
-
-    maxHeight:
-      "calc(100vh - 64px)",
-
-    overflowY: "auto",
-
-    padding: 22,
-
-    borderRadius: 20,
-
-    background:
-      "rgba(4,12,22,.82)",
-
-    border:
-      "1px solid rgba(255,255,255,.13)",
-
-    boxShadow:
-      "0 24px 80px rgba(0,0,0,.4)",
-
-    backdropFilter: "blur(18px)",
-  },
-
-  close: {
-    position: "absolute",
-
-    top: 12,
-    right: 12,
-
-    width: 30,
-    height: 30,
-
-    border: 0,
-
-    borderRadius: "50%",
-
-    background:
-      "rgba(255,255,255,.08)",
-
-    color: "#fff",
-
-    cursor: "pointer",
-
-    fontSize: 20,
-
-    lineHeight: 1,
-  },
-
-  flag: {
-    display: "block",
-
-    width: 58,
-    height: 38,
-
-    objectFit: "cover",
-
-    borderRadius: 7,
-
-    marginBottom: 18,
-  },
-
-  panelEyebrow: {
-    fontSize: 10,
-    letterSpacing: "0.18em",
-    opacity: 0.45,
-  },
-
-  countryName: {
-    margin: "5px 0 20px",
-
-    fontSize: 28,
-
-    letterSpacing: "-0.03em",
-  },
-
-  details: {
-    display: "grid",
-
-    gap: 1,
-
-    overflow: "hidden",
-
-    borderRadius: 12,
-
-    background:
-      "rgba(255,255,255,.055)",
-  },
-
-  detail: {
-    display: "flex",
-
-    justifyContent:
-      "space-between",
-
-    alignItems: "flex-start",
-
-    gap: 18,
-
-    padding: "11px 13px",
-
-    fontSize: 12,
-
-    borderBottom:
-      "1px solid rgba(255,255,255,.06)",
-  },
-
-  detailsLoading: {
-    display: "flex",
-
-    alignItems: "center",
-
-    gap: 10,
-
-    marginBottom: 18,
-
-    padding: "10px 12px",
-
-    borderRadius: 10,
-
-    background:
-      "rgba(255,255,255,.05)",
-
-    fontSize: 12,
-
-    opacity: 0.8,
-  },
-
-  smallSpinner: {
-    width: 12,
-    height: 12,
-
-    flexShrink: 0,
-
-    borderRadius: "50%",
-
-    border:
-      "2px solid rgba(255,255,255,.2)",
-
-    borderTopColor: "#fff",
-
-    animation:
-      "spin 0.8s linear infinite",
-  },
-
-  loadingMessage: {
-    padding: "14px",
-
-    borderRadius: 12,
-
-    background:
-      "rgba(255,255,255,.04)",
-
-    fontSize: 12,
-
-    opacity: 0.65,
-  },
-
-  panelNote: {
-    margin: "16px 0 0",
-
-    fontSize: 11,
-
-    lineHeight: 1.5,
-
-    opacity: 0.5,
   },
 
   controls: {
