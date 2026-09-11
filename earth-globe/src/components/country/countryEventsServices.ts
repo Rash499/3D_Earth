@@ -33,6 +33,23 @@ const MOCK_EVENTS: Record<string, CountryEvent[]> = {
       severity: "important",
       occurredAt: new Date().toISOString(),
       source: "Mock Source",
+      location: "Colombo",
+      latitude: 6.9271,
+      longitude: 79.8612,
+    },
+    {
+      id: "mock-2",
+      title: "Sample infrastructure disruption",
+      summary:
+        "Placeholder content showing a second marker. Once GDELT/AI extraction is wired up, coordinates come from the static gazetteer instead of being hardcoded here.",
+      category: "Infrastructure",
+      importance: 5,
+      severity: "notable",
+      occurredAt: new Date().toISOString(),
+      source: "Mock Source",
+      location: "Kandy",
+      latitude: 7.2906,
+      longitude: 80.6337,
     },
   ],
 };
