@@ -2,6 +2,7 @@ import { theme } from "./shared/theme";
 
 export const DASHBOARD_SECTIONS = [
   "overview",
+  "map",
   "geography",
   "demographics",
   "government",
@@ -17,6 +18,7 @@ export type DashboardSection = (typeof DASHBOARD_SECTIONS)[number];
 
 const LABELS: Record<DashboardSection, string> = {
   overview: "Overview",
+  map: "Event Map",
   geography: "Geography",
   demographics: "Demographics",
   government: "Government",
