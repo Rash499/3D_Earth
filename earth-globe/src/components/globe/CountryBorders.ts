@@ -4,7 +4,7 @@ import type { FeatureCollection, Geometry } from "geojson";
 import type { CountryFeature, TopoJSON } from "./types";
 import { borderRadius, lonLatToVector3 } from "./coordinates";
 
-function getRings(country: CountryFeature): number[][][] {
+export function getRings(country: CountryFeature): number[][][] {
   const geometry = country.geometry;
 
   if (!geometry) return [];
