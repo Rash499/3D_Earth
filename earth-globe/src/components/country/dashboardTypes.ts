@@ -59,4 +59,9 @@ export type CountryEvent = {
   source: string;
   sourceUrl?: string;
   location?: string;
+  // Populated by the AI event-extraction pipeline via the static
+  // gazetteer (see project notes) — not every event will have a precise
+  // coordinate, so the map treats these as optional.
+  latitude?: number;
+  longitude?: number;
 };
