@@ -9,6 +9,8 @@ import { CountryGeography } from "../country/CountryGeography";
 import { CountryGovernment } from "../country/CountryGovernment";
 import { CountryHeader } from "../country/CountryHeader";
 import { CountryInfrastructure } from "../country/CountryInfrastructure";
+import { CountryLanding } from "../country/CountryLanding";
+import { CountryMap } from "../country/CountryMap";
 import {
   CountryNavigation,
   type DashboardSection,
@@ -33,6 +35,10 @@ export default function CountryDashboardPage() {
   // display fallback, not required for the lookup itself.
   const nameHint = (location.state as { name?: string } | null)?.name;
 
+  // Landing screen shown first (flag + "View Country Details" button);
+  // the full dashboard below only renders once this is true.
+  const [revealed, setRevealed] = useState(false);
+
   const [section, setSection] = useState<DashboardSection>("overview");
   const [data, setData] = useState<CountryDashboardData | null>(null);
   const [events, setEvents] = useState<CountryEvent[]>([]);
@@ -51,6 +57,7 @@ export default function CountryDashboardPage() {
     setError(null);
     setNotFound(false);
     setSection("overview");
+    setRevealed(false);
 
     loadCountryDashboard(countryCode, nameHint, controller.signal)
       .then((result) => {
@@ -96,6 +103,21 @@ export default function CountryDashboardPage() {
     );
   }
 
+  if (!revealed) {
+    return (
+      <CountryLanding
+        name={data?.overview.name ?? nameHint ?? "Selected Country"}
+        flag={data?.overview.flag}
+        capital={data?.overview.capital}
+        region={data?.overview.region}
+        subregion={data?.overview.subregion}
+        loading={loading}
+        onViewDetails={() => setRevealed(true)}
+        onBack={() => navigate("/")}
+      />
+    );
+  }
+
   if (loading) {
     return (
       <CenteredState>
@@ -135,6 +157,14 @@ export default function CountryDashboardPage() {
 
         <main style={styles.content}>
           {section === "overview" && <CountryOverview data={data.overview} />}
+          {section === "map" && (
+            <CountryMap
+              countryCode={countryCode}
+              countryName={data.overview.name}
+              events={events}
+              eventsLoading={eventsLoading}
+            />
+          )}
           {section === "geography" && (
             <CountryGeography data={data.geography} />
           )}
