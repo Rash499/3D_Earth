@@ -58,3 +58,18 @@ export function fitZoom(
   const zoom = Math.floor(Math.min(zoomForLon, zoomForLat));
   return Math.max(minZoom, Math.min(maxZoom, zoom));
 }
+
+// Two independent, keyless raster tile providers. Same global tile grid
+// (Web Mercator, z/x/y), just different URL shapes and different infra —
+// if one is blocked in a given network/browser (ad blockers, strict
+// Referrer-Policy, corporate proxies, or a provider policy change all
+// happen in practice), the other one usually isn't. CountryMap tries the
+// first and swaps a given tile to the second only if that tile fails.
+export function osmTileUrl(zoom: number, x: number, y: number): string {
+  return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`;
+}
+
+export function esriTileUrl(zoom: number, x: number, y: number): string {
+  // Esri's legacy World_Imagery service uses the reverse {z}/{y}/{x} order.
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+}

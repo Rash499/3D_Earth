@@ -3,12 +3,11 @@ import { useMemo, useState } from "react";
 import { DashboardCard } from "./shared/DashboardCard";
 import { theme } from "./shared/theme";
 import { COUNTRY_GEO_TABLE } from "./countryGeoTable";
-import { TILE_SIZE, fitZoom, lonToWorldX, latToWorldY } from "./tileMath";
+import { TILE_SIZE, fitZoom, lonToWorldX, latToWorldY, osmTileUrl, esriTileUrl } from "./tileMath";
 import type { CountryEvent } from "./dashboardTypes";
 
 const WIDTH = 560;
 const HEIGHT = 340;
-const TILE_SERVER = "https://tile.openstreetmap.org";
 
 const SEVERITY_COLOR: Record<CountryEvent["severity"], string> = {
   critical: theme.colors.critical,
@@ -47,7 +46,8 @@ export function CountryMap({
   events: CountryEvent[];
   eventsLoading: boolean;
 }) {
-  const [failedTiles, setFailedTiles] = useState(0);
+  const [tileAttempt, setTileAttempt] = useState<Record<string, number>>({});
+  const [bothFailedCount, setBothFailedCount] = useState(0);
 
   const located = useMemo(
     () =>
@@ -113,7 +113,13 @@ export function CountryMap({
       Math.floor((topLeftY + HEIGHT) / TILE_SIZE)
     );
 
-    const tiles: { key: string; left: number; top: number; src: string }[] = [];
+    const tiles: {
+      key: string;
+      left: number;
+      top: number;
+      primarySrc: string;
+      fallbackSrc: string;
+    }[] = [];
 
     for (let tx = startTileX; tx <= endTileX; tx++) {
       const wrappedX = ((tx % numTiles) + numTiles) % numTiles;
@@ -122,7 +128,8 @@ export function CountryMap({
           key: `${zoom}-${tx}-${ty}`,
           left: tx * TILE_SIZE - topLeftX,
           top: ty * TILE_SIZE - topLeftY,
-          src: `${TILE_SERVER}/${zoom}/${wrappedX}/${ty}.png`,
+          primarySrc: osmTileUrl(zoom, wrappedX, ty),
+          fallbackSrc: esriTileUrl(zoom, wrappedX, ty),
         });
       }
     }
@@ -163,22 +170,41 @@ export function CountryMap({
             role="img"
             aria-label={`Map of ${countryName} with recent event locations`}
           >
-            {scene.tiles.map((tile) => (
-              <img
-                key={tile.key}
-                src={tile.src}
-                alt=""
-                loading="lazy"
-                onError={() => setFailedTiles((n) => n + 1)}
-                style={{
-                  position: "absolute",
-                  left: tile.left,
-                  top: tile.top,
-                  width: TILE_SIZE,
-                  height: TILE_SIZE,
-                }}
-              />
-            ))}
+            {scene.tiles.map((tile) => {
+              const attempt = tileAttempt[tile.key] ?? 0;
+              if (attempt >= 2) {
+                // Both providers failed for this tile — leave the dark
+                // background visible instead of a broken-image icon.
+                return null;
+              }
+
+              const src = attempt === 0 ? tile.primarySrc : tile.fallbackSrc;
+
+              return (
+                <img
+                  key={`${tile.key}-${attempt}`}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  onError={() => {
+                    setTileAttempt((prev) => {
+                      const next = (prev[tile.key] ?? 0) + 1;
+                      if (next >= 2) {
+                        setBothFailedCount((n) => n + 1);
+                      }
+                      return { ...prev, [tile.key]: next };
+                    });
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: tile.left,
+                    top: tile.top,
+                    width: TILE_SIZE,
+                    height: TILE_SIZE,
+                  }}
+                />
+              );
+            })}
 
             {scene.markers.map(({ event, x, y }) => (
               <div
@@ -196,12 +222,35 @@ export function CountryMap({
             <span style={styles.attribution}>© OpenStreetMap contributors</span>
           </div>
 
-          {failedTiles > 6 && (
-            <p style={styles.muted}>
-              Some map tiles didn't load — this usually clears up on refresh.
-              For production, point TILE_SERVER in tileMath usage at a
-              dedicated tile provider instead of the public OSM server.
-            </p>
+          {bothFailedCount > 3 && (
+            <div style={styles.diagnostic}>
+              <p style={{ ...styles.muted, margin: 0 }}>
+                No map tiles could load from either provider (OpenStreetMap
+                or Esri). This is almost always one of two things in this
+                project, not the map code itself:
+              </p>
+              <ul style={styles.diagnosticList}>
+                <li>
+                  A Content-Security-Policy meta tag or header restricting{" "}
+                  <code>img-src</code> to your own domain — add{" "}
+                  <code>tile.openstreetmap.org</code> and{" "}
+                  <code>server.arcgisonline.com</code> to it.
+                </li>
+                <li>
+                  A <code>{'<meta name="referrer" content="no-referrer">'}</code>{" "}
+                  tag, or a browser/extension stripping referrers —
+                  OpenStreetMap's tile server blocks referrer-less requests.
+                </li>
+              </ul>
+              <p style={{ ...styles.muted, margin: 0 }}>
+                Quickest check: open{" "}
+                <code>https://tile.openstreetmap.org/1/0/0.png</code>{" "}
+                directly in a new browser tab. If that alone fails to show
+                an image, it's a network/browser block outside this app; if
+                it works there but not here, it's the CSP/referrer case
+                above.
+              </p>
+            </div>
           )}
 
           {located.length === 0 ? (
@@ -236,6 +285,25 @@ export function CountryMap({
 
 const styles = {
   muted: { color: theme.colors.textMuted, fontSize: 13 },
+  diagnostic: {
+    marginTop: 12,
+    padding: "10px 12px",
+    borderRadius: 8,
+    background: "rgba(255, 77, 79, 0.08)",
+    border: `1px solid rgba(255, 77, 79, 0.35)`,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 8,
+  },
+  diagnosticList: {
+    margin: 0,
+    paddingLeft: 18,
+    color: theme.colors.textMuted,
+    fontSize: 13,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 4,
+  },
   mapFrame: {
     position: "relative" as const,
     width: WIDTH,
