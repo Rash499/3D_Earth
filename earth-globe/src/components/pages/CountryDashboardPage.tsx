@@ -6,11 +6,11 @@ import { CountryEconomy } from "../country/CountryEconomy";
 import { CountryEnvironment } from "../country/CountryEnvironment";
 import { CountryEvents } from "../country/CountryEvents";
 import { CountryGeography } from "../country/CountryGeography";
+import { CountryGlobe } from "../country/CountryGlobe";
 import { CountryGovernment } from "../country/CountryGovernment";
 import { CountryHeader } from "../country/CountryHeader";
 import { CountryInfrastructure } from "../country/CountryInfrastructure";
 import { CountryLanding } from "../country/CountryLanding";
-import { CountryMap } from "../country/CountryMap";
 import {
   CountryNavigation,
   type DashboardSection,
@@ -158,7 +158,7 @@ export default function CountryDashboardPage() {
         <main style={styles.content}>
           {section === "overview" && <CountryOverview data={data.overview} />}
           {section === "map" && (
-            <CountryMap
+            <CountryGlobe
               countryCode={countryCode}
               countryName={data.overview.name}
               events={events}
